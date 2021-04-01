@@ -2,6 +2,7 @@ use crate::Graph;
 use graphlib::VertexId;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone)]
 struct DNode {
@@ -26,7 +27,13 @@ impl Eq for DNode {}
 
 impl PartialOrd for DNode {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.g.partial_cmp(&other.g)
+        Some(self.cmp(other))
+    }
+}
+
+impl Hash for DNode {
+    fn hash<H: Hasher>(&self, h: &mut H) {
+        self.node.hash(h);
     }
 }
 
@@ -46,17 +53,17 @@ impl Ord for DNode {
             }
         } else if self.g == f64::NEG_INFINITY {
             if other.g == f64::NAN {
-                Ordering::Less
+                Ordering::Greater
             } else if other.g == f64::NEG_INFINITY {
                 Ordering::Equal
             } else {
-                Ordering::Greater
+                Ordering::Less
             }
         } else if self.g == f64::INFINITY {
             if other.g == f64::INFINITY {
-                Ordering::Equal
-            } else {
                 Ordering::Less
+            } else {
+                Ordering::Greater
             }
         } else {
             if other.g == f64::NAN || other.g == f64::NEG_INFINITY {
@@ -64,10 +71,9 @@ impl Ord for DNode {
             } else if other.g == f64::INFINITY {
                 Ordering::Less
             } else {
-                if self.g < other.g {
+                // <= because otherwise the insertion stuff gets messed up
+                if self.g <= other.g {
                     Ordering::Less
-                } else if self.g == other.g {
-                    Ordering::Equal
                 } else {
                     Ordering::Greater
                 }
@@ -109,13 +115,13 @@ pub fn algo(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Verte
     let mut visited: HashMap<VertexId, DNode> = HashMap::new();
 
     while let Some(mut node) = unvisited.pop_first() {
-        println!("Evaluating {:?}", node.node);
+        // println!("Evaluating {:?} ({:?})", graph.fetch(&node.node), node.node);
         if node.node == *end {
             let mut path = vec![node.node];
             let mut cur = &mut node;
             while let Some(pre) = cur.pre {
                 // UNWRAP
-                println!("PATH NODE: {:?}", cur);
+                // println!("PATH NODE: {:?}", cur);
                 cur = visited.get_mut(&pre).unwrap();
                 path.push(pre);
             }
@@ -136,11 +142,11 @@ pub fn algo(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Verte
                     nb.g = g;
                     nb.pre = Some(node.node);
                 }
+                // println!("Insert OLD");
                 unvisited.insert(nb);
-                println!("Insert OLD");
             } else {
-                println!("Insert NEW");
-                unvisited.insert(DNode::new(g, *n, node.node));
+                // println!("Insert NEW: {:?}", n);
+                unvisited.insert(DNode::new(g, n.clone(), node.node));
             }
         }
         visited.insert(node.node, node);
