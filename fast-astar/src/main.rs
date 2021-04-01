@@ -1,3 +1,4 @@
+#![feature(map_first_last)]
 mod dijkstra;
 mod graph_types;
 use dijkstra::Graph as DGraph;
@@ -18,8 +19,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     graph.add_edge(&a, &b).unwrap();
     graph.add_edge(&a, &d).unwrap();
     graph.add_edge(&b, &c).unwrap();
-    graph.add_edge(&b, &f).unwrap();
-    graph.add_edge(&c, &g).unwrap();
+    graph.add_edge(&b, &e).unwrap();
+    graph.add_edge(&c, &f).unwrap();
     graph.add_edge(&d, &e).unwrap();
     graph.add_edge(&d, &g).unwrap();
     graph.add_edge(&e, &f).unwrap();

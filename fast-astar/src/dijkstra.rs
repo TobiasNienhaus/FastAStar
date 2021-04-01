@@ -1,6 +1,5 @@
 use graphlib::VertexId;
 
-#[feature(map_first_last)]
 use std::collections::BTreeSet;
 
 use std::collections::HashMap;
@@ -21,6 +20,11 @@ impl PartialEq for DNode {
         self.node.eq(&other.node)
     }
 }
+impl PartialEq<VertexId> for DNode {
+    fn eq(&self, other: &VertexId) -> bool {
+        self.node.eq(other)
+    }
+}
 impl Eq for DNode {}
 
 impl PartialOrd for DNode {
@@ -33,6 +37,10 @@ impl Ord for DNode {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // TODO this is a mess
         use std::cmp::Ordering;
+        if self.eq(other) {
+            // TODO FILTHY HACK
+            return Ordering::Equal;
+        }
         if self.g == f64::NAN {
             if other.g == f64::NAN {
                 Ordering::Equal
@@ -80,67 +88,37 @@ impl DNode {
         }
     }
 
-    pub fn other(node: VertexId) -> DNode {
+    pub fn from_id(id: VertexId) -> DNode {
         DNode {
             g: f64::INFINITY,
-            node,
+            node: id,
             pre: None,
+        }
+    }
+
+    pub fn new(g: f64, node: VertexId, pre: VertexId) -> DNode {
+        DNode {
+            g,
+            node,
+            pre: Some(pre),
         }
     }
 }
 
 pub fn algo(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<VertexId>> {
     // TODO use some better type than Vec
-    let mut nodes: Vec<DNode> = Vec::with_capacity(graph.vertex_count());
+    let mut unvisited: BTreeSet<DNode> = BTreeSet::new();
+    unvisited.insert(DNode::start(*start));
     let mut visited: HashMap<VertexId, DNode> = HashMap::new();
-    nodes.extend(graph.vertices().map(|v| {
-        if v == start {
-            DNode::start(*v)
-        } else {
-            DNode::other(*v)
-        }
-    }));
 
-    let print_node = |n: &DNode| {
-        println!("Node: {:?}\n- Data: {:?}", n, graph.fetch(&n.node));
-    };
-    nodes.iter().for_each(print_node);
-    println!("-------------------------\nMin node:\n");
-    print_node(
-        nodes
-            .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap(),
-    );
-
-    // Closures just wouldn't cut it anymore
-    fn min_node<'a>(nvec: &'a Vec<DNode>) -> Option<usize> {
-        nvec.iter()
-            .enumerate()
-            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|val| {
-                if val.1.g == f64::INFINITY {
-                    None
-                } else {
-                    Some(val)
-                }
-            })
-            .flatten() // Big Brain Inc.
-            .map(|a| a.0)
-    }
-
-    fn find_by_id<'a>(nvec: &'a mut Vec<DNode>, id: VertexId) -> Option<&'a mut DNode> {
-        nvec.iter_mut().find(|a| a.node == id)
-    }
-
-    while let Some(index) = min_node(&nodes) {
-        let mut node = nodes.remove(index);
+    while let Some(mut node) = unvisited.pop_first() {
         println!("Evaluating {:?}", node.node);
         if node.node == *end {
             let mut path = vec![node.node];
             let mut cur = &mut node;
             while let Some(pre) = cur.pre {
                 // UNWRAP
+                println!("PATH NODE: {:?}", cur);
                 cur = visited.get_mut(&pre).unwrap();
                 path.push(pre);
             }
@@ -152,22 +130,19 @@ pub fn algo(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Verte
             if visited.contains_key(n) {
                 continue;
             }
-            // TODO find_by_id is O(n) at least which is bad
-            if let Some(nb) = find_by_id(&mut nodes, *n) {
-                let nb_pos = graph.fetch(n).unwrap();
-                let g = nb_pos.dist(pos) + node.g;
-                match nb.pre {
-                    None => {
-                        nb.g = g;
-                        nb.pre = Some(node.node);
-                    }
-                    Some(_) => {
-                        if g < nb.g {
-                            nb.g = g;
-                            nb.pre = Some(node.node);
-                        }
-                    }
+            let nb_pos = graph.fetch(n).unwrap();
+            let g = nb_pos.dist(pos) + node.g;
+            if let Some(mut nb) = unvisited.take(&DNode::from_id(*n)) {
+                // TODO somehow only take if g < nb.g
+                if g < nb.g {
+                    nb.g = g;
+                    nb.pre = Some(node.node);
                 }
+                unvisited.insert(nb);
+                println!("Insert OLD");
+            } else {
+                println!("Insert NEW");
+                unvisited.insert(DNode::new(g, *n, node.node));
             }
         }
         visited.insert(node.node, node);
