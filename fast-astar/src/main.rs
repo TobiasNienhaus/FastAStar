@@ -1,7 +1,7 @@
 mod dijkstra;
 mod graph_types;
-use graph_types::{Node};
 use dijkstra::Graph as DGraph;
+use graph_types::Node;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut graph = DGraph::new();
@@ -28,6 +28,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     graph.add_edge(&g, &h).unwrap();
     graph.add_edge(&h, &i).unwrap();
 
-    dijkstra::algo(&graph, &a, &i);
+    if let Some(p) = dijkstra::algo(&graph, &a, &i) {
+        println!("Path:\n");
+        for n in p {
+            println!("Node: {:?}", graph.fetch(&n));
+        }
+    } else {
+        println!("No Path!");
+    }
     Ok(())
 }

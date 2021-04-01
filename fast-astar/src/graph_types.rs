@@ -1,4 +1,3 @@
-
 #[derive(Debug)]
 pub struct Node {
     x: f64,
@@ -7,7 +6,7 @@ pub struct Node {
 
 impl Node {
     pub fn new(x: f64, y: f64) -> Node {
-        Node {x, y }
+        Node { x, y }
     }
 
     pub fn dist(&self, other: &Node) -> f64 {
