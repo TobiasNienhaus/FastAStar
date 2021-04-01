@@ -1,11 +1,20 @@
 #![feature(map_first_last)]
 mod dijkstra;
 mod graph_types;
-use dijkstra::Graph as DGraph;
+mod img;
+use graph_types::Graph;
 use graph_types::Node;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut graph = DGraph::new();
+    println!("Grayscale:");
+    img::test_img("test_images/image_test.png".into())?;
+    println!("RGB:");
+    img::test_img("test_images/image_test2.png".into())?;
+    Ok(())
+}
+
+fn _dijkstra_test() {
+    let mut graph = Graph::new();
     let a = graph.add_vertex(Node::new(0., 0.));
     let b = graph.add_vertex(Node::new(1., 0.));
     let c = graph.add_vertex(Node::new(2., 0.));
@@ -37,5 +46,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         println!("No Path!");
     }
-    Ok(())
 }

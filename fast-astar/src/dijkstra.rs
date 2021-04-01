@@ -1,10 +1,7 @@
+use crate::Graph;
 use graphlib::VertexId;
-
 use std::collections::BTreeSet;
-
 use std::collections::HashMap;
-
-pub type Graph = super::graph_types::Graph;
 
 #[derive(Debug, Clone)]
 struct DNode {
@@ -132,6 +129,7 @@ pub fn algo(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Verte
             }
             let nb_pos = graph.fetch(n).unwrap();
             let g = nb_pos.dist(pos) + node.g;
+            // TODO somehow test if take works
             if let Some(mut nb) = unvisited.take(&DNode::from_id(*n)) {
                 // TODO somehow only take if g < nb.g
                 if g < nb.g {
