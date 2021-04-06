@@ -1,4 +1,4 @@
-use crate::Graph;
+use crate::{Graph, PathfindingResult};
 use graphlib::VertexId;
 use std::collections::{BTreeSet, HashMap};
 
@@ -6,14 +6,17 @@ use super::types::*;
 
 /// ### A* Algorithm
 /// Implementation based on https://www.redblobgames.com/pathfinding/a-star/implementation.html#cplusplus
-pub fn solve(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<VertexId>> {
+pub fn solve(graph: &Graph, start: &VertexId, end: &VertexId) -> PathfindingResult {
     let mut unvisited: BTreeSet<ASNode> = BTreeSet::new();
     unvisited.insert(ASNode::start(*start));
     let mut visited: HashMap<VertexId, ASNode> = HashMap::new();
 
     let end_pos = graph.fetch(end).unwrap();
 
+    let mut count = 0;
+
     while let Some(mut node) = unvisited.pop_first() {
+        count += 1;
         // println!("Evaluating {:?} ({:?})", graph.fetch(&node.node), node.node);
         if node.node == *end {
             let mut path = vec![node.node];
@@ -24,7 +27,7 @@ pub fn solve(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Vert
                 cur = visited.get_mut(&pre).unwrap();
                 path.push(pre);
             }
-            return Some(path);
+            return PathfindingResult::solved(count, path);
         }
         let pos = graph.fetch(&node.node).unwrap();
 
@@ -54,5 +57,5 @@ pub fn solve(graph: &Graph, start: &VertexId, end: &VertexId) -> Option<Vec<Vert
         visited.insert(node.node, node);
     }
 
-    None
+    PathfindingResult::unsolved(count)
 }

@@ -4,9 +4,9 @@ use image::{io::Reader as ImgReader, GrayImage, Pixel};
 use std::io::Result as IoResult;
 use std::path::PathBuf;
 
-type Grid<T> = Vec<Vec<T>>;
+pub type Grid<T> = Vec<Vec<T>>;
 type BGrid = Grid<bool>;
-type IdGrid = Grid<Option<VertexId>>;
+pub type IdGrid = Grid<Option<VertexId>>;
 
 pub mod traits {
     use super::BGrid;
