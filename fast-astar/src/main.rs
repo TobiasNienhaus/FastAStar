@@ -1,4 +1,5 @@
 #![feature(map_first_last)]
+mod astar;
 mod dijkstra;
 mod graph_types;
 mod img;
@@ -10,9 +11,30 @@ type R = Result<(), Box<dyn std::error::Error>>;
 
 fn main() -> R {
     // dijkstra_test2()?;
-    dijkstra_test2("test_images/graph2.png")?;
-    dijkstra_test2("test_images/graph4.png")?;
-    img_test()?;
+    pf_test("test_images/graph2.png")?;
+    pf_test("test_images/graph4.png")?;
+    // img_test()?;
+    Ok(())
+}
+
+fn pf_test(name: &str) -> R {
+    let (ids, graph) = img::load_graph_from_img(name.into())?;
+    if let Some(start) = ids.get_2d((0, 0)) {
+        if let Some(end) = ids.get_2d((ids.width() - 1, ids.height() - 1)) {
+            let d = dijkstra::solve(&graph, start, end);
+            let a = astar::solve(&graph, start, end);
+            if d.is_none() {
+                assert!(a.is_none(), "Dijkstra has no path, while A* has one!");
+            } else {
+                assert!(a.is_some(), "Dijkstra has a path, while A* has none");
+                assert_eq!(
+                    d.unwrap().len(),
+                    a.unwrap().len(),
+                    "Path length was different"
+                );
+            }
+        }
+    }
     Ok(())
 }
 
