@@ -40,7 +40,7 @@ fn dijkstra_test2(name: &str) -> R {
         if let Some(end) = ids.get_2d((ids.width() - 1, ids.height() - 1)) {
             println!("Start: {:?}", graph.fetch(start));
             println!("End: {:?}", graph.fetch(end));
-            if let Some(p) = dijkstra::algo(&graph, start, end) {
+            if let Some(p) = dijkstra::solve(&graph, start, end) {
                 println!("Path:");
                 for n in p.iter() {
                     println!("Node: {:?}", graph.fetch(&n));
@@ -79,7 +79,7 @@ fn _dijkstra_test() {
     graph.add_edge(&g, &h).unwrap();
     graph.add_edge(&h, &i).unwrap();
 
-    if let Some(p) = dijkstra::algo(&graph, &a, &i) {
+    if let Some(p) = dijkstra::solve(&graph, &a, &i) {
         println!("Path:");
         for n in p.iter() {
             println!("Node: {:?}", graph.fetch(&n));
