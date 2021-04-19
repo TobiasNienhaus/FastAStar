@@ -38,3 +38,4 @@ Cargo.lock
 
 # Folders from other branches
 /petgraph-testing/**/*
+fast-astar/.idea
